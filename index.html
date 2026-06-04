@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <link rel="stylesheet" href="style.css">
+    <title>Maze Collector - TSP Challenge</title>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <div class="info-panel">
+                <div class="info-item">
+                    <div class="info-label">Fase</div>
+                    <div class="info-value" id="level">1</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Chaves Coletadas</div>
+                    <div class="info-value" id="keys-collected">0</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Inimigos Restantes</div>
+                    <div class="info-value" id="enemies-left">0</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Rota Ótima (TSP)</div>
+                    <div class="info-value" id="route-length">0</div>
+                </div>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="inventory">
+            <div class="inventory-title">🎒 Inventário (Ordenado por Valor - MergeSort)</div>
+            <div class="inventory-items" id="inventory"></div>
+        </div>
+        
+        <div class="controls">
+            🎮 Controles: WASD ou Setas | 🔑 Colete todas as 3 chaves | ⚔️ Elimine inimigos (encoste neles) | 🎯 Siga a rota verde (TSP)
+        </div>
+    </div>
+
+    <div class="message" id="messageBox">
+        <h2 id="messageTitle">Parabéns!</h2>
+        <p id="messageText">Você completou a fase!</p>
+        <button onclick="nextLevel()">Próxima Fase</button>
+    </div>
+<script src="script.js"></script>
+</body>
+</html>
