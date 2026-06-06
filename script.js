@@ -194,6 +194,154 @@
         let tsp = new TSP();
         let optimalRoute = [];
         
+        // ==================== A* PATHFINDING ====================
+        const GRID_SIZE = 40; // 40x40 pixel cells
+        
+        class Node {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.g = 0; // cost from start
+                this.h = 0; // heuristic to goal
+                this.f = 0; // g + h
+                this.parent = null;
+            }
+        }
+        
+        class AStar {
+            constructor(gridWidth, gridHeight, gridSize) {
+                this.gridWidth = gridWidth;
+                this.gridHeight = gridHeight;
+                this.gridSize = gridSize;
+            }
+            
+            heuristic(a, b) {
+                // Manhattan distance
+                return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+            }
+            
+            getNeighbors(node) {
+                const neighbors = [];
+                const directions = [
+                    { dx: 0, dy: -1 }, // up
+                    { dx: 1, dy: 0 },  // right
+                    { dx: 0, dy: 1 },  // down
+                    { dx: -1, dy: 0 }  // left
+                ];
+                
+                for (let dir of directions) {
+                    const newX = node.x + dir.dx;
+                    const newY = node.y + dir.dy;
+                    
+                    if (newX >= 0 && newX < this.gridWidth && newY >= 0 && newY < this.gridHeight) {
+                        neighbors.push(new Node(newX, newY));
+                    }
+                }
+                
+                return neighbors;
+            }
+            
+            isWalkable(gridX, gridY) {
+                const pixelX = gridX * this.gridSize;
+                const pixelY = gridY * this.gridSize;
+                
+                // Check if this grid cell collides with any wall
+                for (let wall of walls) {
+                    if (pixelX < wall.x + wall.width &&
+                        pixelX + this.gridSize > wall.x &&
+                        pixelY < wall.y + wall.height &&
+                        pixelY + this.gridSize > wall.y) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            
+            findPath(startX, startY, endX, endY) {
+                const startGridX = Math.floor(startX / this.gridSize);
+                const startGridY = Math.floor(startY / this.gridSize);
+                const endGridX = Math.floor(endX / this.gridSize);
+                const endGridY = Math.floor(endY / this.gridSize);
+                
+                const startNode = new Node(startGridX, startGridY);
+                const endNode = new Node(endGridX, endGridY);
+                
+                const openSet = [startNode];
+                const closedSet = [];
+                
+                while (openSet.length > 0) {
+                    // Find node with lowest f score
+                    let current = openSet[0];
+                    let currentIndex = 0;
+                    
+                    for (let i = 1; i < openSet.length; i++) {
+                        if (openSet[i].f < current.f) {
+                            current = openSet[i];
+                            currentIndex = i;
+                        }
+                    }
+                    
+                    if (current.x === endNode.x && current.y === endNode.y) {
+                        // Path found, reconstruct it
+                        const path = [];
+                        let temp = current;
+                        while (temp) {
+                            path.unshift({
+                                x: temp.x * this.gridSize + this.gridSize / 2,
+                                y: temp.y * this.gridSize + this.gridSize / 2
+                            });
+                            temp = temp.parent;
+                        }
+                        return path.length > 1 ? path : [];
+                    }
+                    
+                    openSet.splice(currentIndex, 1);
+                    closedSet.push(current);
+                    
+                    const neighbors = this.getNeighbors(current);
+                    
+                    for (let neighbor of neighbors) {
+                        if (!this.isWalkable(neighbor.x, neighbor.y)) {
+                            continue;
+                        }
+                        
+                        if (closedSet.some(n => n.x === neighbor.x && n.y === neighbor.y)) {
+                            continue;
+                        }
+                        
+                        const tempG = current.g + 1;
+                        let newPath = false;
+                        
+                        const inOpen = openSet.find(n => n.x === neighbor.x && n.y === neighbor.y);
+                        
+                        if (inOpen) {
+                            if (tempG < inOpen.g) {
+                                inOpen.g = tempG;
+                                inOpen.parent = current;
+                                inOpen.f = inOpen.g + inOpen.h;
+                            }
+                        } else {
+                            neighbor.g = tempG;
+                            neighbor.h = this.heuristic(neighbor, endNode);
+                            neighbor.f = neighbor.g + neighbor.h;
+                            neighbor.parent = current;
+                            openSet.push(neighbor);
+                            newPath = true;
+                        }
+                    }
+                    
+                    if (openSet.length === 0) {
+                        // No path found
+                        return [];
+                    }
+                }
+                
+                return [];
+            }
+        }
+        
+        let aStar = new AStar(Math.ceil(canvas.width / GRID_SIZE), Math.ceil(canvas.height / GRID_SIZE), GRID_SIZE);
+        
         // ==================== CONFIGURAÇÃO DAS FASES ====================
         const levels = {
             1: { // Fácil
@@ -281,7 +429,10 @@
                 y: e.y,
                 startX: e.x,
                 startY: e.y,
-                angle: enemyAngles[idx] || 0
+                angle: enemyAngles[idx] || 0,
+                path: [],
+                pathIndex: 0,
+                lastPathUpdate: 0
             }));
             walls = levelData.walls;
             exitPoint = levelData.exit;
@@ -338,22 +489,51 @@
         }
         
         function updateEnemies() {
+            const now = Date.now();
+            const PATHFINDING_UPDATE_INTERVAL = 500; // Update path every 500ms
+            const ENEMY_SPEED = 2;
+            
             for (let i = 0; i < enemies.length; i++) {
                 const enemy = enemies[i];
                 
-                switch(enemy.movePattern) {
-                    case "horizontal":
-                        enemy.x = enemy.startX + Math.sin(Date.now() / 1000) * enemy.range;
-                        break;
-                    case "vertical":
-                        enemy.y = enemy.startY + Math.sin(Date.now() / 1000) * enemy.range;
-                        break;
-                    case "circular":
-                        enemy.angle += 0.02;
-                        enemy.x = enemy.startX + Math.cos(enemy.angle) * enemy.radius;
-                        enemy.y = enemy.startY + Math.sin(enemy.angle) * enemy.radius;
-                        break;
+                // Update pathfinding at intervals to improve performance
+                if (now - enemy.lastPathUpdate > PATHFINDING_UPDATE_INTERVAL) {
+                    enemy.path = aStar.findPath(enemy.x, enemy.y, player.x, player.y);
+                    enemy.pathIndex = 0;
+                    enemy.lastPathUpdate = now;
                 }
+                
+                // Follow the path
+                if (enemy.path && enemy.path.length > 0 && enemy.pathIndex < enemy.path.length) {
+                    const targetPoint = enemy.path[enemy.pathIndex];
+                    const dx = targetPoint.x - enemy.x;
+                    const dy = targetPoint.y - enemy.y;
+                    const distance = Math.hypot(dx, dy);
+                    
+                    if (distance < ENEMY_SPEED) {
+                        // Move to next waypoint
+                        enemy.pathIndex++;
+                    } else {
+                        // Move towards target
+                        const moveX = (dx / distance) * ENEMY_SPEED;
+                        const moveY = (dy / distance) * ENEMY_SPEED;
+                        
+                        const newX = enemy.x + moveX;
+                        const newY = enemy.y + moveY;
+                        
+                        // Check wall collision
+                        if (!checkCollisionWithWalls(newX, enemy.y, 25)) {
+                            enemy.x = newX;
+                        }
+                        if (!checkCollisionWithWalls(enemy.x, newY, 25)) {
+                            enemy.y = newY;
+                        }
+                    }
+                }
+                
+                // Keep enemies in bounds
+                enemy.x = Math.max(0, Math.min(canvas.width - 25, enemy.x));
+                enemy.y = Math.max(0, Math.min(canvas.height - 25, enemy.y));
             }
         }
         
@@ -383,9 +563,8 @@
                     player.x + player.size > enemy.x &&
                     player.y < enemy.y + 25 &&
                     player.y + player.size > enemy.y) {
-                    enemies.splice(i, 1);
-                    i--;
-                    document.getElementById('enemies-left').textContent = enemies.length;
+                    loseGame();
+                    return;
                 }
             }
             
@@ -398,6 +577,21 @@
                     completeLevel();
                 }
             }
+        }
+        
+        function loseGame() {
+            gameRunning = false;
+            const messageBox = document.getElementById('messageBox');
+            
+            document.getElementById('messageTitle').textContent = '💀 DERROTA! 💀';
+            document.getElementById('messageText').innerHTML = `
+                Você foi capturado por um inimigo!<br><br>
+                Chaves coletadas: ${inventory.getItemCount()}<br>
+                Tente novamente!
+            `;
+            document.querySelector('.message button').textContent = 'Tentar Novamente';
+            
+            messageBox.style.display = 'block';
         }
         
         function completeLevel() {
@@ -415,19 +609,19 @@
                 document.getElementById('messageTitle').textContent = 'Fase Concluída!';
                 document.getElementById('messageText').innerHTML = `Você coletou ${inventory.getItemCount()} itens! Prepare-se para a próxima fase!`;
             }
+            document.querySelector('.message button').textContent = 'Próxima Fase';
             
             messageBox.style.display = 'block';
         }
         
         function nextLevel() {
+            document.getElementById('messageBox').style.display = 'none';
             if (currentLevel < 3) {
                 currentLevel++;
                 loadLevel(currentLevel);
-                document.getElementById('messageBox').style.display = 'none';
             } else {
                 currentLevel = 1;
                 loadLevel(1);
-                document.getElementById('messageBox').style.display = 'none';
             }
         }
         
