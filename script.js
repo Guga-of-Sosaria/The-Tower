@@ -361,7 +361,7 @@
                     { x: 0, y: 300, width: 250, height: 20 },
                     { x: 550, y: 100, width: 250, height: 20 }
                 ],
-                exit: { x: 700, y: 550 }
+                exit: { x: 100, y: 100 }
             },
             2: { // Médio
                 playerStart: { x: 50, y: 50 },
@@ -384,7 +384,7 @@
                     { x: 450, y: 500, width: 350, height: 20 },
                     { x: 300, y: 300, width: 100, height: 20 }
                 ],
-                exit: { x: 750, y: 50 }
+                exit: { x: 50, y: 50 }
             },
             3: { // Difícil
                 playerStart: { x: 50, y: 50 },
@@ -412,7 +412,7 @@
                     { x: 350, y: 300, width: 20, height: 150 },
                     { x: 550, y: 350, width: 20, height: 100 }
                 ],
-                exit: { x: 700, y: 550 }
+                exit: { x: 50, y: 50 }
             }
         };
         
