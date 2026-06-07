@@ -1,5 +1,6 @@
 # The Tower, um simples jogo de labirinto
 Gênero: Puzzle
+
 Objetivo: Coletar todas as chaves do labirinto, e desviar dos inimigos
 
 ## Alunos:
