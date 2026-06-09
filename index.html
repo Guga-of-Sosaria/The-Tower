@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <link rel="stylesheet" href="style.css">
-    <title>Maze Collector - TSP Challenge</title>
+    <link rel="stylesheet" href="style.css">
+    <title>The Tower</title>
 </head>
 <body>
     <div class="game-container">
@@ -16,7 +16,7 @@
                 </div>
                 <div class="info-item">
                     <div class="info-label">Chaves Coletadas</div>
-                    <div class="info-value" id="keys-collected">0</div>
+                    <div class="info-value" id="keys-collected">0/3</div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">Inimigos Restantes</div>
@@ -26,18 +26,38 @@
                     <div class="info-label">Rota Ótima (TSP)</div>
                     <div class="info-value" id="route-length">0</div>
                 </div>
+                <div class="info-item">
+                    <div class="info-label">Status</div>
+                    <div class="info-value" id="player-status">Normal</div>
+                </div>
             </div>
         </div>
         
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         
-        <div class="inventory">
-            <div class="inventory-title">🎒 Inventário (Ordenado por Valor - MergeSort)</div>
-            <div class="inventory-items" id="inventory"></div>
+        <div class="npc-bubble" id="npcBubble" style="display: none;">
+            <div class="npc-bubble-arrow"></div>
+            <div class="npc-bubble-text" id="npcBubbleText"></div>
+            <div class="npc-bubble-hint">💬 Pressione F para falar</div>
+        </div>
+        
+        <div class="inventory-panel" id="inventoryPanel" style="display: none;">
+            <div class="inventory-header">
+                <div class="inventory-title">🎒 INVENTÁRIO</div>
+                <div class="inventory-stats">
+                    <span>📦 Itens: <span id="inventoryCount">0</span></span>
+                    <span>💰 Valor Total: <span id="inventoryTotalValue">0</span></span>
+                </div>
+                <button class="close-inventory" id="closeInventory">✖</button>
+            </div>
+            <div class="inventory-grid" id="inventoryGrid"></div>
+            <div class="inventory-instructions">
+                📋 Clique em "USAR" para ativar um item | ⌨️ ESC para fechar
+            </div>
         </div>
         
         <div class="controls">
-            🎮 Controles: WASD ou Setas | 🔑 Colete todas as 3 chaves | ⚔️ Elimine inimigos (encoste neles) | 🎯 Siga a rota verde (TSP)
+            🎮 MOVIMENTO: WASD ou Setas | 💬 INTERAGIR: F | 📦 INVENTÁRIO: I | ⚡ ATIRAR (se tiver arma): ESPAÇO
         </div>
     </div>
 
@@ -46,6 +66,15 @@
         <p id="messageText">Você completou a fase!</p>
         <button onclick="nextLevel()">Próxima Fase</button>
     </div>
-<script src="script.js"></script>
+
+    <div class="message" id="gameOverBox">
+        <h2 style="color: #ff4444;">💀 GAME OVER 💀</h2>
+        <p>Você foi derrotado por um inimigo!</p>
+        <button onclick="restartGame()">Recomeçar Fase</button>
+    </div>
+
+    <div class="cooldown-message" id="cooldownMessage">⏳ Em recarga...</div>
+
+    <script src="script.js"></script>
 </body>
 </html>
