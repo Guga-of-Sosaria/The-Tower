@@ -31,6 +31,13 @@ let pursuitMode = false;
 let glassesActive = false;
 let glassesEndTime = 0;
 
+const startScreen = document.getElementById("startScreen");
+const playButton = document.getElementById("playButton");
+
+playButton.addEventListener("click", () => {
+    startScreen.style.display = "none";
+});
+
 class AStar {
     constructor(walls, canvasWidth, canvasHeight, cellSize = 25) {
         this.walls = walls;
