@@ -1225,6 +1225,7 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
+
 function init() {
     loadLevel(1);
     gameLoop();
